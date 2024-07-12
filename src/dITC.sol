@@ -19,11 +19,12 @@ contract dMrsf is ConfirmedOwner,FunctionsClient,ERC20{
 //0xC43081d9EA6d1c53f1F0e525504d47Dd60de12da MRSF
     error dMrsf__NotEnoughCollateral();
     error dMrsf__DoesntMeetMinimalWithdrawalAmount();
+    error dMrsf__TransferFailed();
     
 
     uint256 private constant PRECISION = 1e18;
 
-    address constant SEPOLIA_USDC = ;
+    address constant SEPOLIA_USDC = 0xAF0d217854155ea67D583E4CB5724f7caeC3Dc87 ;
     address private constant SEPOLIA_FUNCTIONS_ROUTER = 0xb83E47C2bC239B3bf370bc41e1459A34b41238D0;
     address private constant SEPOLIA_MRSF_PRICE_FEED = 0xc59E3633BAAC79493d908e63626716e204A45EdF;
     uint32 private constant GAS_LIMIT = 300_000;
@@ -122,8 +123,14 @@ contract dMrsf is ConfirmedOwner,FunctionsClient,ERC20{
     }
 
     function withdrawlAmount() external {
+        uint256 amountToWithdraw = s_userToWithdrawlAmount[msg.sender];
         s_userToWithdrawlAmount[msg.sender] = 0;
 
+        bool success = ERC20(SEPOLIA_USDC).transfer(msg.sender, amountToWithdraw);
+        if(!success)
+        {
+            revert dMrsf__TransferFailed();
+        }
     }
     //Chainlink oracle will always response with fulfillRequest no matter what function you call:
     function fulfillRequest(bytes32 requestId, bytes memory response, bytes memory ) internal override{
@@ -167,5 +174,37 @@ contract dMrsf is ConfirmedOwner,FunctionsClient,ERC20{
         (, int256 price, , , ) = priceFeed.latestRoundData();
         return uint256(price) * ADDITIONAL_FEED_PRECISION;
     }
+
+    function getRequest(bytes32 requestId) public view returns(dMrsfRequest memory)
+    {
+        return s_requestIdToRequest[requestId];
+    } 
+
+    function getPendingWithdrawalAmount(address user) public view returns(uint256) {
+        return s_userToWithdrawlAmount[user];
+    }
+
+    function getPortfolioBalance() public view returns(uint256){
+        return s_portfolioBalance;
+    }
+
+    function getSubId() public view returns(uint64)
+    {
+        return i_subId;
+    }
     
+    function getRedeemSourceCode() public view returns(string memory)
+    {
+        return s_redeemSourceCode;
+    }
+
+    function getMintSourceCode() public view returns(string memory)
+    {
+        return s_mintSourceCode;
+    }
+
+    function getCollateralRation() public pure  returns(uint256)
+    {
+        return COLLATERAL_RATIO;
+    }
 }

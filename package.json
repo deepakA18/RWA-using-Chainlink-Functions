@@ -1,0 +1,22 @@
+{
+
+  "scripts": {
+
+    "simulate": "bash -c 'source .env && node ./functions/simulators/alpacaMintSimulator.js'",
+
+    "uploadSecrets": "bash -c 'source .env && node ./functions/uploadSecrets.js'"
+
+  },
+
+  "dependencies": {
+
+    "@chainlink/functions-toolkit": "^0.2.8",
+
+    "@trufflesuite/uws-js-unofficial": "^20.30.0-unofficial.0",
+
+    "ethers": "5.4"
+
+  }
+
+}
+
